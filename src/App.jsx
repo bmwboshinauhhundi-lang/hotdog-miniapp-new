@@ -4,7 +4,6 @@ import {
   collection,
   getDocs,
   doc,
-  getDoc,
   setDoc,
   addDoc,
   serverTimestamp,
@@ -38,7 +37,7 @@ function App() {
     const tg = window.Telegram?.WebApp;
 
     if (!tg) {
-      console.warn("Telegram WebApp не найден");
+      console.warn("Telegram WebApp topilmadi");
       return;
     }
 
@@ -50,18 +49,20 @@ function App() {
     if (user) {
       setTelegramUser(user);
     } else {
-      console.warn("Telegram user не найден");
+      console.warn("Telegram foydalanuvchisi topilmadi");
     }
   }, []);
 
   // =========================
-  // LOAD PRODUCTS
+  // PRODUCTS
   // =========================
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const snapshot = await getDocs(collection(db, "products"));
+        const snapshot = await getDocs(
+          collection(db, "products")
+        );
 
         const productsData = snapshot.docs.map((item) => ({
           id: item.id,
@@ -70,7 +71,7 @@ function App() {
 
         setProducts(productsData);
       } catch (error) {
-        console.error("Ошибка загрузки товаров:", error);
+        console.error("Mahsulotlarni yuklashda xato:", error);
       } finally {
         setLoading(false);
       }
@@ -78,71 +79,6 @@ function App() {
 
     loadProducts();
   }, []);
-
-  // =========================
-  // SAVE TELEGRAM USER
-  // =========================
-
-  useEffect(() => {
-    if (!telegramUser) return;
-
-    const saveTelegramUser = async () => {
-      try {
-        const userRef = doc(
-          db,
-          "users",
-          String(telegramUser.id)
-        );
-
-        const userSnapshot = await getDoc(userRef);
-
-        const oldUserData = userSnapshot.exists()
-          ? userSnapshot.data()
-          : {};
-
-        const userData = {
-          telegramId: telegramUser.id,
-          firstName: telegramUser.first_name || "",
-          lastName: telegramUser.last_name || "",
-          username: telegramUser.username || "",
-          updatedAt: serverTimestamp(),
-        };
-
-        // Сохраняем существующую роль
-        if (oldUserData.role) {
-          userData.role = oldUserData.role;
-        }
-
-        // Новый пользователь
-        if (!userSnapshot.exists()) {
-          userData.role = "user";
-          userData.createdAt = serverTimestamp();
-        }
-
-        // Сохраняем телефон
-        if (oldUserData.phone) {
-          userData.phone = oldUserData.phone;
-          setPhone(oldUserData.phone);
-        }
-
-        await setDoc(userRef, userData, {
-          merge: true,
-        });
-
-        console.log(
-          "Telegram пользователь сохранён:",
-          telegramUser.id
-        );
-      } catch (error) {
-        console.error(
-          "Ошибка сохранения пользователя:",
-          error
-        );
-      }
-    };
-
-    saveTelegramUser();
-  }, [telegramUser]);
 
   // =========================
   // CART
@@ -208,7 +144,7 @@ function App() {
   };
 
   // =========================
-  // CART TOTAL
+  // TOTAL
   // =========================
 
   const cartCount = cart.reduce(
@@ -226,17 +162,15 @@ function App() {
   );
 
   // =========================
-  // FORMAT PRICE
+  // PRICE
   // =========================
 
   const formatPrice = (price) => {
-    return `${Number(price || 0).toLocaleString(
-      "ru-RU"
-    )} сум`;
+    return `${Number(price || 0).toLocaleString("ru-RU")} so'm`;
   };
 
   // =========================
-  // GET LOCATION
+  // LOCATION
   // =========================
 
   const getLocation = () => {
@@ -244,29 +178,23 @@ function App() {
 
     if (!navigator.geolocation) {
       setCheckoutError(
-        "Ваш браузер не поддерживает геолокацию."
+        "Brauzeringiz geolokatsiyani qo‘llab-quvvatlamaydi."
       );
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-
         setLocation({
-          latitude,
-          longitude,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
         });
       },
       (error) => {
-        console.error(
-          "Ошибка геолокации:",
-          error
-        );
+        console.error("Geolokatsiya xatosi:", error);
 
         setCheckoutError(
-          "Не удалось получить геолокацию. Разрешите доступ к местоположению."
+          "Geolokatsiyani olish imkoni bo‘lmadi. Joylashuvga ruxsat bering."
         );
       },
       {
@@ -288,13 +216,13 @@ function App() {
 
     if (!telegramUser) {
       setCheckoutError(
-        "Откройте Mini App через Telegram."
+        "Iltimos, Mini App'ni Telegram orqali oching."
       );
       return;
     }
 
     if (cart.length === 0) {
-      setCheckoutError("Корзина пуста.");
+      setCheckoutError("Savat bo‘sh.");
       return;
     }
 
@@ -302,16 +230,12 @@ function App() {
     const cleanAddress = address.trim();
 
     if (!cleanPhone) {
-      setCheckoutError(
-        "Введите номер телефона."
-      );
+      setCheckoutError("Telefon raqamingizni kiriting.");
       return;
     }
 
     if (!cleanAddress) {
-      setCheckoutError(
-        "Введите адрес доставки."
-      );
+      setCheckoutError("Yetkazib berish manzilini kiriting.");
       return;
     }
 
@@ -319,7 +243,7 @@ function App() {
 
     try {
       // =========================
-      // SAVE USER
+      // USER
       // =========================
 
       const userRef = doc(
@@ -332,12 +256,9 @@ function App() {
         userRef,
         {
           telegramId: telegramUser.id,
-          firstName:
-            telegramUser.first_name || "",
-          lastName:
-            telegramUser.last_name || "",
-          username:
-            telegramUser.username || "",
+          firstName: telegramUser.first_name || "",
+          lastName: telegramUser.last_name || "",
+          username: telegramUser.username || "",
           phone: cleanPhone,
           updatedAt: serverTimestamp(),
         },
@@ -347,20 +268,18 @@ function App() {
       );
 
       // =========================
-      // ORDER ITEMS
+      // ITEMS
       // =========================
 
       const orderItems = cart.map((item) => ({
         productId: item.id,
-        name: item.name || "Товар",
+        name: item.name || "Mahsulot",
         price: Number(item.price || 0),
-        quantity: Number(
-          item.quantity || 1
-        ),
+        quantity: Number(item.quantity || 1),
       }));
 
       // =========================
-      // CUSTOMER NAME
+      // CUSTOMER
       // =========================
 
       const customerName = [
@@ -372,7 +291,7 @@ function App() {
         .trim();
 
       // =========================
-      // ORDER DATA
+      // ORDER
       // =========================
 
       const orderData = {
@@ -384,12 +303,8 @@ function App() {
 
         location: location
           ? {
-              latitude: Number(
-                location.latitude
-              ),
-              longitude: Number(
-                location.longitude
-              ),
+              latitude: Number(location.latitude),
+              longitude: Number(location.longitude),
             }
           : null,
 
@@ -408,19 +323,12 @@ function App() {
         createdAt: serverTimestamp(),
       };
 
-      // =========================
-      // CREATE ORDER
-      // =========================
-
       const orderRef = await addDoc(
         collection(db, "orders"),
         orderData
       );
 
-      console.log(
-        "Заказ создан:",
-        orderRef.id
-      );
+      console.log("Buyurtma yaratildi:", orderRef.id);
 
       // =========================
       // SUCCESS
@@ -439,21 +347,15 @@ function App() {
       setAddress("");
       setLocation(null);
     } catch (error) {
-      console.error(
-        "Ошибка создания заказа:",
-        error
-      );
+      console.error("Buyurtma yaratishda xato:", error);
 
-      if (
-        error.code ===
-        "permission-denied"
-      ) {
+      if (error.code === "permission-denied") {
         setCheckoutError(
-          "Firestore запретил создание заказа. Проверьте Security Rules."
+          "Buyurtma yuborilmadi. Firebase Security Rules'ni tekshiring."
         );
       } else {
         setCheckoutError(
-          "Не удалось оформить заказ. Попробуйте ещё раз."
+          "Buyurtmani rasmiylashtirishda xatolik yuz berdi. Qaytadan urinib ko‘ring."
         );
       }
     } finally {
@@ -462,13 +364,11 @@ function App() {
   };
 
   // =========================
-  // OPEN CHECKOUT
+  // CHECKOUT
   // =========================
 
   const openCheckout = () => {
-    if (cart.length === 0) {
-      return;
-    }
+    if (cart.length === 0) return;
 
     setCheckoutError("");
     setShowCheckout(true);
@@ -485,7 +385,7 @@ function App() {
           🌭
         </div>
 
-        <p>Загрузка меню...</p>
+        <p>Menyu yuklanmoqda...</p>
       </div>
     );
   }
@@ -500,12 +400,10 @@ function App() {
         <div className="empty-cart">
           <div>✅</div>
 
-          <h2>
-            Заказ принят!
-          </h2>
+          <h2>Buyurtma qabul qilindi!</h2>
 
           <p>
-            Спасибо за заказ
+            Rahmat
             {telegramUser?.first_name
               ? `, ${telegramUser.first_name}`
               : ""}
@@ -519,7 +417,7 @@ function App() {
               fontSize: "13px",
             }}
           >
-            Номер заказа:
+            Buyurtma raqami:
           </div>
 
           <strong
@@ -535,15 +433,14 @@ function App() {
           <div
             style={{
               display: "flex",
-              justifyContent:
-                "space-between",
+              justifyContent: "space-between",
               marginTop: "18px",
               padding: "15px",
               background: "#f7f7f7",
               borderRadius: "15px",
             }}
           >
-            <span>Сумма:</span>
+            <span>Jami:</span>
 
             <strong>
               {formatPrice(
@@ -559,7 +456,7 @@ function App() {
               setOrderSuccess(null)
             }
           >
-            Вернуться к меню
+            Menyuga qaytish
           </button>
         </div>
       </div>
@@ -572,6 +469,7 @@ function App() {
 
   return (
     <div className="app">
+
       {/* HEADER */}
 
       <header className="header">
@@ -584,42 +482,21 @@ function App() {
 
           <p>
             {telegramUser
-              ? `Привет, ${
-                  telegramUser.first_name ||
-                  "гость"
+              ? `Salom, ${
+                  telegramUser.first_name || "mehmon"
                 }!`
-              : "Добро пожаловать!"}
+              : "Xush kelibsiz!"}
           </p>
         </div>
       </header>
 
-      {/* ADMIN BUTTON */}
-
-      {telegramUser?.id && (
-        <button
-          type="button"
-          className="back-to-admin-button"
-          onClick={() => {
-            const tg =
-              window.Telegram?.WebApp;
-
-            if (tg) {
-              tg.close();
-            }
-          }}
-        >
-          ⚙️ Открыть админ-панель
-        </button>
-      )}
-
       {/* USER */}
 
-      {telegramUser && (
+      {telegramUser ? (
         <div className="user-info">
           <div className="user-avatar">
             {(
-              telegramUser.first_name ||
-              "U"
+              telegramUser.first_name || "U"
             )
               .charAt(0)
               .toUpperCase()}
@@ -628,7 +505,7 @@ function App() {
           <div>
             <strong>
               {telegramUser.first_name ||
-                "Пользователь"}
+                "Foydalanuvchi"}
 
               {telegramUser.last_name
                 ? ` ${telegramUser.last_name}`
@@ -642,21 +519,17 @@ function App() {
             </span>
           </div>
         </div>
-      )}
-
-      {!telegramUser && (
+      ) : (
         <div className="user-info">
           <div className="user-avatar">
             👤
           </div>
 
           <div>
-            <strong>
-              Гость
-            </strong>
+            <strong>Mehmon</strong>
 
             <span>
-              Откройте приложение через Telegram
+              Ilovani Telegram orqali oching
             </span>
           </div>
         </div>
@@ -665,13 +538,10 @@ function App() {
       {/* SECTION */}
 
       <div className="section-title">
-        <h2>Меню</h2>
+        <h2>Menyu</h2>
 
         <span>
-          {products.length}{" "}
-          {products.length === 1
-            ? "товар"
-            : "товаров"}
+          {products.length} ta mahsulot
         </span>
       </div>
 
@@ -683,16 +553,14 @@ function App() {
             <div>🍔</div>
 
             <p>
-              Пока нет товаров.
+              Hozircha mahsulotlar yo‘q.
             </p>
           </div>
         ) : (
           products.map((product) => {
-            const cartItem =
-              cart.find(
-                (item) =>
-                  item.id === product.id
-              );
+            const cartItem = cart.find(
+              (item) => item.id === product.id
+            );
 
             return (
               <article
@@ -705,14 +573,13 @@ function App() {
                       src={product.image}
                       alt={
                         product.name ||
-                        "Товар"
+                        "Mahsulot"
                       }
                       style={{
                         width: "100%",
                         height: "100%",
                         objectFit: "cover",
-                        borderRadius:
-                          "16px",
+                        borderRadius: "16px",
                       }}
                     />
                   ) : (
@@ -723,12 +590,12 @@ function App() {
                 <div className="product-content">
                   <h2>
                     {product.name ||
-                      "Без названия"}
+                      "Nomsiz mahsulot"}
                   </h2>
 
                   <p>
                     {product.description ||
-                      "Вкусный хот-дог"}
+                      "Mazali hot-dog"}
                   </p>
 
                   <div className="product-bottom">
@@ -752,9 +619,7 @@ function App() {
                         </button>
 
                         <span>
-                          {
-                            cartItem.quantity
-                          }
+                          {cartItem.quantity}
                         </span>
 
                         <button
@@ -776,7 +641,7 @@ function App() {
                           addToCart(product)
                         }
                       >
-                        Добавить
+                        Qo‘shish
                       </button>
                     )}
                   </div>
@@ -803,7 +668,7 @@ function App() {
             </span>
 
             <strong>
-              Открыть корзину
+              Savatni ochish
             </strong>
           </div>
 
@@ -829,9 +694,7 @@ function App() {
             }
           >
             <div className="cart-header">
-              <h2>
-                Корзина
-              </h2>
+              <h2>Savat</h2>
 
               <button
                 type="button"
@@ -848,9 +711,7 @@ function App() {
               <div className="empty-cart">
                 <div>🛒</div>
 
-                <p>
-                  Корзина пуста
-                </p>
+                <p>Savat bo‘sh</p>
               </div>
             ) : (
               <>
@@ -866,15 +727,13 @@ function App() {
                             src={item.image}
                             alt={
                               item.name ||
-                              "Товар"
+                              "Mahsulot"
                             }
                             style={{
                               width: "100%",
                               height: "100%",
-                              objectFit:
-                                "cover",
-                              borderRadius:
-                                "13px",
+                              objectFit: "cover",
+                              borderRadius: "13px",
                             }}
                           />
                         ) : (
@@ -928,8 +787,7 @@ function App() {
                             item.price || 0
                           ) *
                             Number(
-                              item.quantity ||
-                                0
+                              item.quantity || 0
                             )
                         )}
                       </strong>
@@ -938,25 +796,19 @@ function App() {
                 </div>
 
                 <div className="cart-total">
-                  <span>
-                    Итого
-                  </span>
+                  <span>Jami</span>
 
                   <strong>
-                    {formatPrice(
-                      cartTotal
-                    )}
+                    {formatPrice(cartTotal)}
                   </strong>
                 </div>
 
                 <button
                   type="button"
                   className="checkout-button"
-                  onClick={
-                    openCheckout
-                  }
+                  onClick={openCheckout}
                 >
-                  Оформить заказ
+                  Buyurtma berish
                 </button>
               </>
             )}
@@ -980,9 +832,7 @@ function App() {
             }
           >
             <div className="cart-header">
-              <h2>
-                Оформление
-              </h2>
+              <h2>Buyurtma berish</h2>
 
               <button
                 type="button"
@@ -1027,9 +877,8 @@ function App() {
               </div>
             )}
 
-            <form
-              onSubmit={handleOrder}
-            >
+            <form onSubmit={handleOrder}>
+
               {/* PHONE */}
 
               <label
@@ -1040,7 +889,7 @@ function App() {
                   fontWeight: "bold",
                 }}
               >
-                Телефон
+                Telefon raqami
               </label>
 
               <input
@@ -1056,15 +905,12 @@ function App() {
                 style={{
                   width: "100%",
                   padding: "13px",
-                  border:
-                    "1px solid #e5e5e5",
+                  border: "1px solid #e5e5e5",
                   borderRadius: "12px",
                   outline: "none",
-                  fontFamily:
-                    "inherit",
+                  fontFamily: "inherit",
                   fontSize: "14px",
-                  marginBottom:
-                    "14px",
+                  marginBottom: "14px",
                 }}
               />
 
@@ -1078,7 +924,7 @@ function App() {
                   fontWeight: "bold",
                 }}
               >
-                Адрес доставки
+                Yetkazib berish manzili
               </label>
 
               <textarea
@@ -1088,22 +934,19 @@ function App() {
                     event.target.value
                   )
                 }
-                placeholder="Введите адрес доставки"
+                placeholder="Manzilingizni kiriting"
                 rows="3"
                 required
                 style={{
                   width: "100%",
                   padding: "13px",
-                  border:
-                    "1px solid #e5e5e5",
+                  border: "1px solid #e5e5e5",
                   borderRadius: "12px",
                   outline: "none",
                   resize: "vertical",
-                  fontFamily:
-                    "inherit",
+                  fontFamily: "inherit",
                   fontSize: "14px",
-                  marginBottom:
-                    "14px",
+                  marginBottom: "14px",
                 }}
               />
 
@@ -1112,18 +955,15 @@ function App() {
               <div
                 style={{
                   padding: "14px",
-                  background:
-                    "#f7f7f7",
+                  background: "#f7f7f7",
                   borderRadius: "15px",
-                  marginBottom:
-                    "14px",
+                  marginBottom: "14px",
                 }}
               >
                 <div
                   style={{
                     display: "flex",
-                    alignItems:
-                      "center",
+                    alignItems: "center",
                     justifyContent:
                       "space-between",
                     gap: "10px",
@@ -1132,43 +972,35 @@ function App() {
                   <div>
                     <strong
                       style={{
-                        display:
-                          "block",
-                        fontSize:
-                          "14px",
+                        display: "block",
+                        fontSize: "14px",
                       }}
                     >
-                      📍 Геолокация
+                      📍 Geolokatsiya
                     </strong>
 
                     <span
                       style={{
-                        display:
-                          "block",
-                        marginTop:
-                          "4px",
-                        color:
-                          "#777",
-                        fontSize:
-                          "12px",
+                        display: "block",
+                        marginTop: "4px",
+                        color: "#777",
+                        fontSize: "12px",
                       }}
                     >
                       {location
-                        ? "Местоположение получено"
-                        : "Местоположение не получено"}
+                        ? "Joylashuv olindi"
+                        : "Joylashuv olinmagan"}
                     </span>
                   </div>
 
                   <button
                     type="button"
                     className="add-button"
-                    onClick={
-                      getLocation
-                    }
+                    onClick={getLocation}
                   >
                     {location
-                      ? "Обновить"
-                      : "Получить"}
+                      ? "Yangilash"
+                      : "Olish"}
                   </button>
                 </div>
               </div>
@@ -1178,18 +1010,12 @@ function App() {
               {checkoutError && (
                 <div
                   style={{
-                    padding:
-                      "12px",
-                    marginBottom:
-                      "14px",
-                    borderRadius:
-                      "12px",
-                    background:
-                      "#ffe5e5",
-                    color:
-                      "#c62828",
-                    fontSize:
-                      "13px",
+                    padding: "12px",
+                    marginBottom: "14px",
+                    borderRadius: "12px",
+                    background: "#ffe5e5",
+                    color: "#c62828",
+                    fontSize: "13px",
                   }}
                 >
                   {checkoutError}
@@ -1199,14 +1025,10 @@ function App() {
               {/* TOTAL */}
 
               <div className="cart-total">
-                <span>
-                  К оплате
-                </span>
+                <span>To‘lov summasi</span>
 
                 <strong>
-                  {formatPrice(
-                    cartTotal
-                  )}
+                  {formatPrice(cartTotal)}
                 </strong>
               </div>
 
@@ -1215,19 +1037,16 @@ function App() {
               <button
                 type="submit"
                 className="checkout-button"
-                disabled={
-                  orderLoading
-                }
+                disabled={orderLoading}
                 style={{
-                  opacity:
-                    orderLoading
-                      ? 0.6
-                      : 1,
+                  opacity: orderLoading
+                    ? 0.6
+                    : 1,
                 }}
               >
                 {orderLoading
-                  ? "Оформление..."
-                  : "Подтвердить заказ"}
+                  ? "Yuborilmoqda..."
+                  : "Buyurtmani tasdiqlash"}
               </button>
             </form>
           </div>
@@ -1238,4 +1057,3 @@ function App() {
 }
 
 export default App;
-

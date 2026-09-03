@@ -36,6 +36,10 @@ button:hover {
   opacity: 0.92;
 }
 
+button:active {
+  transform: scale(0.98);
+}
+
 #root {
   width: 100%;
   min-height: 100vh;
@@ -99,6 +103,7 @@ button:hover {
   border-radius: 18px;
 
   font-size: 32px;
+
   box-shadow: 0 5px 15px rgba(124, 179, 66, 0.25);
 }
 
@@ -111,32 +116,6 @@ button:hover {
   margin: 4px 0 0;
   color: #777;
   font-size: 13px;
-}
-
-/* =========================
-   ADMIN PANELGA QAYTISH
-========================= */
-
-.back-to-admin-button {
-  width: 100%;
-
-  margin-bottom: 16px;
-  padding: 12px;
-
-  border: none;
-  border-radius: 12px;
-
-  background: #1b5e20;
-  color: #a5d66c;
-
-  font-size: 13px;
-  font-weight: bold;
-
-  cursor: pointer;
-}
-
-.back-to-admin-button:active {
-  transform: scale(0.98);
 }
 
 /* =========================
@@ -181,6 +160,7 @@ button:hover {
 .user-info span {
   display: block;
   margin-top: 3px;
+
   color: #888;
   font-size: 12px;
 }
@@ -328,7 +308,6 @@ button:hover {
   justify-content: center;
 
   padding: 0;
-
   border: none;
   border-radius: 10px;
 
@@ -348,7 +327,6 @@ button:hover {
 
 .quantity-control span {
   min-width: 18px;
-
   text-align: center;
   font-weight: bold;
 }
@@ -359,7 +337,6 @@ button:hover {
 
 .cart-bar {
   position: fixed;
-
   left: 50%;
   bottom: 14px;
 
@@ -445,7 +422,6 @@ button:hover {
 .cart-sheet {
   width: 100%;
   max-width: 600px;
-
   margin: 0 auto;
 
   max-height: 85vh;
@@ -498,7 +474,6 @@ button:hover {
   justify-content: center;
 
   padding: 0;
-
   border: none;
   border-radius: 50%;
 
@@ -545,7 +520,6 @@ button:hover {
   justify-content: center;
 
   background: #e6f4d9;
-
   border-radius: 13px;
 
   font-size: 27px;
@@ -584,7 +558,6 @@ button:hover {
 
 .cart-quantity span {
   min-width: 18px;
-
   text-align: center;
   font-weight: bold;
 }
@@ -623,7 +596,6 @@ button:hover {
 
 .checkout-button {
   width: 100%;
-
   min-height: 52px;
 
   margin-top: 15px;
@@ -653,7 +625,6 @@ button:hover {
   padding: 45px 20px;
 
   text-align: center;
-
   color: #777;
 }
 
