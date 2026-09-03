@@ -95,11 +95,11 @@ button:hover {
   align-items: center;
   justify-content: center;
 
-  background: #ffb703;
+  background: #7cb342;
   border-radius: 18px;
 
   font-size: 32px;
-  box-shadow: 0 5px 15px rgba(255, 183, 3, 0.2);
+  box-shadow: 0 5px 15px rgba(124, 179, 66, 0.25);
 }
 
 .header h1 {
@@ -126,8 +126,8 @@ button:hover {
   border: none;
   border-radius: 12px;
 
-  background: #171717;
-  color: #ffb703;
+  background: #1b5e20;
+  color: #a5d66c;
 
   font-size: 13px;
   font-weight: bold;
@@ -166,7 +166,7 @@ button:hover {
   align-items: center;
   justify-content: center;
 
-  background: #fff1c7;
+  background: #e6f4d9;
   border-radius: 50%;
 
   font-size: 18px;
@@ -246,7 +246,7 @@ button:hover {
   align-items: center;
   justify-content: center;
 
-  background: #fff1c7;
+  background: #e6f4d9;
   border-radius: 16px;
 
   font-size: 40px;
@@ -293,8 +293,8 @@ button:hover {
   border: none;
   border-radius: 11px;
 
-  background: #ffb703;
-  color: #171717;
+  background: #7cb342;
+  color: #ffffff;
 
   padding: 9px 13px;
 
@@ -332,7 +332,8 @@ button:hover {
   border: none;
   border-radius: 10px;
 
-  background: #ffb703;
+  background: #7cb342;
+  color: #ffffff;
 
   font-size: 19px;
   font-weight: bold;
@@ -379,7 +380,7 @@ button:hover {
   border: none;
   border-radius: 17px;
 
-  background: #171717;
+  background: #1b5e20;
   color: #ffffff;
 
   box-shadow: 0 7px 25px rgba(0, 0, 0, 0.22);
@@ -401,8 +402,8 @@ button:hover {
   align-items: center;
   justify-content: center;
 
-  background: #ffb703;
-  color: #171717;
+  background: #7cb342;
+  color: #ffffff;
 
   border-radius: 50%;
 
@@ -543,7 +544,7 @@ button:hover {
   align-items: center;
   justify-content: center;
 
-  background: #fff1c7;
+  background: #e6f4d9;
 
   border-radius: 13px;
 
@@ -631,8 +632,8 @@ button:hover {
   border: none;
   border-radius: 15px;
 
-  background: #ffb703;
-  color: #171717;
+  background: #7cb342;
+  color: #ffffff;
 
   font-size: 16px;
   font-weight: bold;
