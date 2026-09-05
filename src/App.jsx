@@ -1,18 +1,22 @@
+
 import { useEffect, useState } from "react";
 import {
   collection,
   getDocs,
+  getDoc,
   doc,
   setDoc,
   addDoc,
   serverTimestamp,
-} from "firebase/firestore";
+ } from "firebase/firestore";
 import { db } from "./firebase/config";
 import "./App.css";
 
 function App() {
   const [telegramUser, setTelegramUser] = useState(null);
   const [products, setProducts] = useState([]);
+  const [botImage, setBotImage] = useState("");
+  const [shopName, setShopName] = useState("Hot Dog");
   const [cart, setCart] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -53,14 +57,46 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    loadBotSettings();
+  }, []);
+
   // =========================
   // PRODUCTS
   // =========================
+
+  // =========================
+  // PRODUCTS
+  // =========================
+
+  const loadBotSettings = async () => {
+    try {
+      const botSnap = await getDoc(doc(db, "settings", "bot"));
+      if (botSnap.exists()) {
+        const data = botSnap.data() || {};
+        setBotImage(data.image_data || "");
+      }
+
+      const shopSnap = await getDoc(doc(db, "settings", "shop"));
+      if (shopSnap.exists()) {
+        const data = shopSnap.data() || {};
+        setShopName(data.shopName || "Hot Dog");
+      }
+    } catch (error) {
+      console.warn("Bot sozlamalarini yuklashda xatolik:", error);
+    }
+  };
 
   const loadProducts = async () => {
     setProductsError("");
 
     try {
+      // Firestore'dagi hozirgi struktura:
+      // products/{productId}
+      // name, description, price, image_file_id, active, created_at, created_by
+      //
+      // active=false bo'lgan mahsulotlarni menyuda ko'rsatmaymiz.
+      // active maydoni eski mahsulotlarda bo'lmasa, ular ham ko'rsatiladi.
       const snapshot = await getDocs(collection(db, "products"));
 
       const productsData = snapshot.docs
@@ -73,34 +109,27 @@ function App() {
             description: data.description || "",
             price: Number(data.price || 0),
             active: data.active !== false,
-
-            // Telegram file_id saqlanadi zaxira sifatida.
             image_file_id: data.image_file_id || "",
-
-            // Asosiy rasm:
-            // Python bot Firebase Storage'dan olingan URL'ni
-            // shu image maydoniga yozadi.
+            // Rasm bot tomonidan fayl sifatida yuklanib, Firestore'da
+            // data:image/...;base64,... ko‘rinishida saqlanadi.
+            // Shuning uchun qo‘lda URL kerak emas.
             image:
-              typeof data.image === "string" && data.image.trim()
-                ? data.image.trim()
-                : typeof data.image_url === "string" &&
-                    data.image_url.trim()
-                  ? data.image_url.trim()
-                  : typeof data.imageUrl === "string" &&
-                      data.imageUrl.trim()
-                    ? data.imageUrl.trim()
-                    : "",
-
+              data.image_data ||
+              data.image ||
+              data.image_url ||
+              data.imageUrl ||
+              "",
             created_at: data.created_at || null,
             created_by: data.created_by || null,
           };
         })
         .filter((product) => product.active);
 
+      // Yangi mahsulotlar birinchi ko'rinishi uchun created_at bo'yicha
+      // client tomonda xavfsiz tartiblaymiz. Timestamp bo'lmasa oxirida qoladi.
       productsData.sort((a, b) => {
         const aTime = a.created_at?.toMillis?.() || 0;
         const bTime = b.created_at?.toMillis?.() || 0;
-
         return bTime - aTime;
       });
 
@@ -525,11 +554,20 @@ function App() {
 
       <header className="header">
         <div className="logo">
-          🌭
+          {botImage ? (
+            <img
+              src={botImage}
+              alt={shopName}
+              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }}
+              onError={(event) => { event.currentTarget.style.display = "none"; }}
+            />
+          ) : (
+            "🌭"
+          )}
         </div>
 
         <div>
-          <h1>Hot Dog</h1>
+          <h1>{shopName}</h1>
 
           <p>
             {telegramUser
@@ -648,40 +686,13 @@ function App() {
               >
                 <div className="product-image">
                   {product.image ? (
-                    <>
-                      <img
-                        src={product.image}
-                        alt={product.name || "Mahsulot"}
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                        onError={(event) => {
-                          event.currentTarget.style.display =
-                            "none";
-
-                          const fallback =
-                            event.currentTarget.parentElement?.querySelector(
-                              ".product-image-fallback"
-                            );
-
-                          if (fallback) {
-                            fallback.style.display = "flex";
-                          }
-                        }}
-                      />
-
-                      <span
-                        className="product-image-fallback"
-                        style={{
-                          display: "none",
-                          width: "100%",
-                          height: "100%",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        🌭
-                      </span>
-                    </>
+                    <img
+                      src={product.image}
+                      alt={product.name || "Mahsulot"}
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
+                      }}
+                    />
                   ) : (
                     "🌭"
                   )}
@@ -823,41 +834,13 @@ function App() {
                     >
                       <div className="cart-item-image">
                         {item.image ? (
-                          <>
-                            <img
-                              src={item.image}
-                              alt={item.name || "Mahsulot"}
-                              loading="lazy"
-                              referrerPolicy="no-referrer"
-                              onError={(event) => {
-                                event.currentTarget.style.display =
-                                  "none";
-
-                                const fallback =
-                                  event.currentTarget.parentElement?.querySelector(
-                                    ".cart-image-fallback"
-                                  );
-
-                                if (fallback) {
-                                  fallback.style.display =
-                                    "flex";
-                                }
-                              }}
-                            />
-
-                            <span
-                              className="cart-image-fallback"
-                              style={{
-                                display: "none",
-                                width: "100%",
-                                height: "100%",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              🌭
-                            </span>
-                          </>
+                          <img
+                            src={item.image}
+                            alt={item.name || "Mahsulot"}
+                            onError={(event) => {
+                              event.currentTarget.style.display = "none";
+                            }}
+                          />
                         ) : (
                           "🌭"
                         )}
