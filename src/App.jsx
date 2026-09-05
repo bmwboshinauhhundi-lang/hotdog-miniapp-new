@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   collection,
@@ -7,7 +6,7 @@ import {
   setDoc,
   addDoc,
   serverTimestamp,
- } from "firebase/firestore";
+} from "firebase/firestore";
 import { db } from "./firebase/config";
 import "./App.css";
 
@@ -58,20 +57,10 @@ function App() {
   // PRODUCTS
   // =========================
 
-  // =========================
-  // PRODUCTS
-  // =========================
-
   const loadProducts = async () => {
     setProductsError("");
 
     try {
-      // Firestore'dagi hozirgi struktura:
-      // products/{productId}
-      // name, description, price, image_file_id, active, created_at, created_by
-      //
-      // active=false bo'lgan mahsulotlarni menyuda ko'rsatmaymiz.
-      // active maydoni eski mahsulotlarda bo'lmasa, ular ham ko'rsatiladi.
       const snapshot = await getDocs(collection(db, "products"));
 
       const productsData = snapshot.docs
@@ -84,24 +73,34 @@ function App() {
             description: data.description || "",
             price: Number(data.price || 0),
             active: data.active !== false,
+
+            // Telegram file_id saqlanadi zaxira sifatida.
             image_file_id: data.image_file_id || "",
-            // Agar keyinchalik bot web URL saqlasa, frontend uni ham ishlatadi.
+
+            // Asosiy rasm:
+            // Python bot Firebase Storage'dan olingan URL'ni
+            // shu image maydoniga yozadi.
             image:
-              data.image ||
-              data.image_url ||
-              data.imageUrl ||
-              "",
+              typeof data.image === "string" && data.image.trim()
+                ? data.image.trim()
+                : typeof data.image_url === "string" &&
+                    data.image_url.trim()
+                  ? data.image_url.trim()
+                  : typeof data.imageUrl === "string" &&
+                      data.imageUrl.trim()
+                    ? data.imageUrl.trim()
+                    : "",
+
             created_at: data.created_at || null,
             created_by: data.created_by || null,
           };
         })
         .filter((product) => product.active);
 
-      // Yangi mahsulotlar birinchi ko'rinishi uchun created_at bo'yicha
-      // client tomonda xavfsiz tartiblaymiz. Timestamp bo'lmasa oxirida qoladi.
       productsData.sort((a, b) => {
         const aTime = a.created_at?.toMillis?.() || 0;
         const bTime = b.created_at?.toMillis?.() || 0;
+
         return bTime - aTime;
       });
 
@@ -649,13 +648,40 @@ function App() {
               >
                 <div className="product-image">
                   {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.name || "Mahsulot"}
-                      onError={(event) => {
-                        event.currentTarget.style.display = "none";
-                      }}
-                    />
+                    <>
+                      <img
+                        src={product.image}
+                        alt={product.name || "Mahsulot"}
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        onError={(event) => {
+                          event.currentTarget.style.display =
+                            "none";
+
+                          const fallback =
+                            event.currentTarget.parentElement?.querySelector(
+                              ".product-image-fallback"
+                            );
+
+                          if (fallback) {
+                            fallback.style.display = "flex";
+                          }
+                        }}
+                      />
+
+                      <span
+                        className="product-image-fallback"
+                        style={{
+                          display: "none",
+                          width: "100%",
+                          height: "100%",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        🌭
+                      </span>
+                    </>
                   ) : (
                     "🌭"
                   )}
@@ -797,13 +823,41 @@ function App() {
                     >
                       <div className="cart-item-image">
                         {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name || "Mahsulot"}
-                            onError={(event) => {
-                              event.currentTarget.style.display = "none";
-                            }}
-                          />
+                          <>
+                            <img
+                              src={item.image}
+                              alt={item.name || "Mahsulot"}
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                              onError={(event) => {
+                                event.currentTarget.style.display =
+                                  "none";
+
+                                const fallback =
+                                  event.currentTarget.parentElement?.querySelector(
+                                    ".cart-image-fallback"
+                                  );
+
+                                if (fallback) {
+                                  fallback.style.display =
+                                    "flex";
+                                }
+                              }}
+                            />
+
+                            <span
+                              className="cart-image-fallback"
+                              style={{
+                                display: "none",
+                                width: "100%",
+                                height: "100%",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              🌭
+                            </span>
+                          </>
                         ) : (
                           "🌭"
                         )}
