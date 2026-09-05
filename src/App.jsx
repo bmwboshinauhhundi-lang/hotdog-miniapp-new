@@ -7,7 +7,7 @@ import {
   setDoc,
   addDoc,
   serverTimestamp,
-} from "firebase/firestore";
+ } from "firebase/firestore";
 import { db } from "./firebase/config";
 import "./App.css";
 
@@ -17,6 +17,7 @@ function App() {
   const [cart, setCart] = useState([]);
 
   const [loading, setLoading] = useState(true);
+  const [productsError, setProductsError] = useState("");
   const [orderLoading, setOrderLoading] = useState(false);
 
   const [showCart, setShowCart] = useState(false);
@@ -57,26 +58,77 @@ function App() {
   // PRODUCTS
   // =========================
 
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const snapshot = await getDocs(
-          collection(db, "products")
-        );
+  // =========================
+  // PRODUCTS
+  // =========================
 
-        const productsData = snapshot.docs.map((item) => ({
-          id: item.id,
-          ...item.data(),
-        }));
+  const loadProducts = async () => {
+    setProductsError("");
 
-        setProducts(productsData);
-      } catch (error) {
-        console.error("Mahsulotlarni yuklashda xato:", error);
-      } finally {
-        setLoading(false);
+    try {
+      // Firestore'dagi hozirgi struktura:
+      // products/{productId}
+      // name, description, price, image_file_id, active, created_at, created_by
+      //
+      // active=false bo'lgan mahsulotlarni menyuda ko'rsatmaymiz.
+      // active maydoni eski mahsulotlarda bo'lmasa, ular ham ko'rsatiladi.
+      const snapshot = await getDocs(collection(db, "products"));
+
+      const productsData = snapshot.docs
+        .map((item) => {
+          const data = item.data() || {};
+
+          return {
+            id: item.id,
+            name: data.name || "",
+            description: data.description || "",
+            price: Number(data.price || 0),
+            active: data.active !== false,
+            image_file_id: data.image_file_id || "",
+            // Agar keyinchalik bot web URL saqlasa, frontend uni ham ishlatadi.
+            image:
+              data.image ||
+              data.image_url ||
+              data.imageUrl ||
+              "",
+            created_at: data.created_at || null,
+            created_by: data.created_by || null,
+          };
+        })
+        .filter((product) => product.active);
+
+      // Yangi mahsulotlar birinchi ko'rinishi uchun created_at bo'yicha
+      // client tomonda xavfsiz tartiblaymiz. Timestamp bo'lmasa oxirida qoladi.
+      productsData.sort((a, b) => {
+        const aTime = a.created_at?.toMillis?.() || 0;
+        const bTime = b.created_at?.toMillis?.() || 0;
+        return bTime - aTime;
+      });
+
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Mahsulotlarni yuklashda xato:", error);
+
+      let message = "Mahsulotlarni yuklashda xatolik yuz berdi.";
+
+      if (error?.code === "permission-denied") {
+        message =
+          "Firestore mahsulotlarni o'qishga ruxsat bermadi. Security Rules'ni tekshiring.";
+      } else if (error?.code === "failed-precondition") {
+        message =
+          "Firebase konfiguratsiyasi yoki Firestore indeksi bilan bog'liq xatolik.";
+      } else if (error?.message) {
+        message = `Mahsulotlarni yuklashda xato: ${error.message}`;
       }
-    };
 
+      setProductsError(message);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadProducts();
   }, []);
 
@@ -545,6 +597,34 @@ function App() {
         </span>
       </div>
 
+      {productsError && (
+        <div
+          style={{
+            padding: "14px",
+            marginBottom: "14px",
+            background: "#ffe5e5",
+            color: "#c62828",
+            borderRadius: "14px",
+            fontSize: "13px",
+            lineHeight: 1.45,
+          }}
+        >
+          <div>{productsError}</div>
+
+          <button
+            type="button"
+            className="add-button"
+            onClick={() => {
+              setLoading(true);
+              loadProducts();
+            }}
+            style={{ marginTop: "10px" }}
+          >
+            Qayta yuklash
+          </button>
+        </div>
+      )}
+
       {/* PRODUCTS */}
 
       <main className="products">
@@ -571,15 +651,9 @@ function App() {
                   {product.image ? (
                     <img
                       src={product.image}
-                      alt={
-                        product.name ||
-                        "Mahsulot"
-                      }
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "16px",
+                      alt={product.name || "Mahsulot"}
+                      onError={(event) => {
+                        event.currentTarget.style.display = "none";
                       }}
                     />
                   ) : (
@@ -725,15 +799,9 @@ function App() {
                         {item.image ? (
                           <img
                             src={item.image}
-                            alt={
-                              item.name ||
-                              "Mahsulot"
-                            }
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              borderRadius: "13px",
+                            alt={item.name || "Mahsulot"}
+                            onError={(event) => {
+                              event.currentTarget.style.display = "none";
                             }}
                           />
                         ) : (
