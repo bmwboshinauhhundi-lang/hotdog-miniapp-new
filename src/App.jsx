@@ -306,11 +306,12 @@ function App() {
       return;
     }
 
-    const cleanPhone = phone.trim();
+    const phoneDigits = phone.replace(/\D/g, "").slice(0, 9);
+    const cleanPhone = `+998${phoneDigits}`;
     const cleanAddress = address.trim();
 
-    if (!cleanPhone) {
-      setCheckoutError("Telefon raqamingizni kiriting.");
+    if (phoneDigits.length !== 9) {
+      setCheckoutError("Telefon raqamini to‘liq kiriting: +998 dan keyin 9 ta raqam.");
       return;
     }
 
@@ -997,27 +998,22 @@ function App() {
                 Telefon raqami
               </label>
 
-              <input
-                type="tel"
-                value={phone}
-                onChange={(event) =>
-                  setPhone(
-                    event.target.value
-                  )
-                }
-                placeholder="+998 90 123 45 67"
-                required
-                style={{
-                  width: "100%",
-                  padding: "13px",
-                  border: "1px solid #e5e5e5",
-                  borderRadius: "12px",
-                  outline: "none",
-                  fontFamily: "inherit",
-                  fontSize: "14px",
-                  marginBottom: "14px",
-                }}
-              />
+              <div className="phone-input-wrap">
+                <span className="phone-prefix">+998</span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  value={phone}
+                  onChange={(event) => {
+                    const digits = event.target.value.replace(/\D/g, "").slice(0, 9);
+                    setPhone(digits);
+                  }}
+                  placeholder="90 123 45 67"
+                  maxLength={9}
+                  required
+                />
+              </div>
 
               {/* ADDRESS */}
 
@@ -1096,6 +1092,16 @@ function App() {
                         ? "Joylashuv olindi"
                         : "Joylashuv olinmagan"}
                     </span>
+                    {location && (
+                      <a
+                        className="map-link"
+                        href={`https://www.google.com/maps?q=${location.latitude},${location.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        🗺 Xaritada ko‘rish
+                      </a>
+                    )}
                   </div>
 
                   <button
